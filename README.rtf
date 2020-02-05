@@ -1,0 +1,61 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671
+{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww13420\viewh5160\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs24 \cf0 README for SlushFundMini - Small scale, high resolution simulations of ice-brine environments\
+
+\f1\b0 \
+
+\f0\b Contents
+\f1\b0 \
+	
+\f0\b - Overview\
+	- Files Included\
+	- Inputs and Outputs\
+	- Limitations/Works in Progress/New Features
+\f1\b0 \
+\
+
+\f0\b Overview
+\f1\b0 \
+	The purpose of this program is to simulate the thermodynamic and physicochemical evolution of solidifying ice-brine environments. The code is designed to take a number of environmental parameters as inputs, utilize reactive transport theory to simulate the evolution of the system, and produce spatiotemporal profiles of the systems thermal, chemical, and physical evolution in the form of vertical profiles of temperature, salinity, porosity, and bulk salinity. Nearly all user input will occur in the file \'91SF1D_Lakes.m\'92, which is where the model should be run from.\
+\
+
+\f0\b Files Included\
+
+\f1\b0 	SF1D_Lakes.m - main file where model inputs will be modified and where the code will be run from\
+	one_D_adv_ARD_interactive_lakes.m - sub cycle which runs the reactive transport portion of the code - really the only other file that may be modified slightly as this file contains the liquidus equation for the respective brine\
+	one_D_advective_flux_lakes.m - sub cycle which calculated the one-dimensional gravity drainage of brine out of the growing ice layer (based on work from Buffo et al 2019 and Griewank and Notz 2013)\
+	Thomas_Trid.m - Thomas tridiagonal algorithm for quickly calculating the inversion of sparse tridiagonal matrices\
+	Liquidus - 1.0 - master - file containing the Liquidus 1.0 code I\'92ve written, this can be used to produce quadratic liquidus curves for any brine chemistry supported by FREZCHEM 6.2. Additional documentation for how to use this code can be found in the README in this folder.\
+\
+
+\f0\b Inputs and Outputs\
+
+\f1\b0 	
+\f0\b Inputs
+\f1\b0 \
+	There are substantial comments within the code which should aid in the selection/modification of desired input parameters. All user input modifications will occur above line 55 \'91%% Plotting Vector\'92. Some notes: some input parameters will typically vary with each other i.e. Tbottom, S_bottom, rho_br as these parameters are all linked. Surface temperature can either be set as a constant (Ttop) or as a time varying function (T_surf [line 42]). Boundary conditions can be set in lines 45-53. This will determine if the system is open or closed.\
+	
+\f0\b Outputs
+\f1\b0 \
+	Currently two figures are produced - the final profile of the system and evolving profiles during the simulation. The number of profiles catalogued in the evolving profiles can be modified in line 134.\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b \cf0 Limitations/Works in Progress/New Features\
+
+\f1\b0 	Currently the model simulates closed systems as accruing salt in the remaining underlying brine phase due to gravity drainage from the forming ice layer. Thus, the brine salinity steadily increases as the ice grows. Once the brine reaches a preset saturation concentration, the formation of a salt hydrate phase is simulated. The result is that the brine remains at the saturation limit while the amount of precipitated salt is tracked with the parameter \'91Salt_Layer\'92 which will be an integer=n, multiplying this by the spatial discretization \'91dz\'92 will give the physical thickness of the accreted salt layer in meters. If this layer ever reaches the same thickness as the remaining underlying brine the model will automatically end (this could easily be removed). Additionally, when salt hydrates are formed there is a substantial release of energy through the enthalpy of formation. This is accounted for by calculating the quantity of salt precipitated and adding the correct amount of heat, distributed evenly, to the remaining brine. This is the newest phase of the model and could very well have some remaining bugs. I, myself, have only begun to experiment with the limits of this portion of the code - so updates will certainly be come as well as additional documentation when things are ironed out.\
+	If you want to change the chemistry and thus liquidus of the brine in question I would recommend running Liquidus 1.0 to get the quadratic form of the liquidus. This can then be used in the file \'91one_D_adv_ARD_interactive_lakes.m\'92. You\'92ll see some previous liquidus curves commented out here (around line 36), just use the same form as these and write in your new  liquidus curve, where delta_T is the freezing point depression due to the solute in question. Obviously change other things accordingly, such as brine density, ocean temp, brine salinity, etc that would be changed by adding different solutes to the brine.\
+\
+\
+
+\f0\b NOTES:\
+- If a counter starts to run up indefinitely (> 500) in the command window of MATLAB it means the code is NOT converging and you should kill it - this is counting iterations of the reactive transport code - it\'92s okay if it\'92s low numbers and you\'92ll see it cycle when you start the run as it takes a second to stabilize, but if it gets too large is means the run isn\'92t working\
+- Make sure the right Ttop/T_surf is getting called in the reactive transport code (line 82 and 127) of SF1D_Lakes.m\
+- more to come\
+\
+}
