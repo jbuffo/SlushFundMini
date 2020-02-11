@@ -1,0 +1,1 @@
+Be careful using Liquidus code as it relies on FREZCHEM which is written in an older version of FORTRAN. Recently I was trying to use a newer gfortran compliler and the code was not interfacing well with due to the way FREZCHEM is written. The code works best with older FORTRAN compilers (currently I use GNU Fortran GCC 6.1.0)
