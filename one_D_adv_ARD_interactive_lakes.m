@@ -40,8 +40,22 @@ while SErr>STol || TErr>TTol || PhiErr>PhiTol;
     %     delta_T=Tm-(-(1.333489497*(10^-5)*S_np1_km1_j.^2)-0.01612951864*S_np1_km1_j+...
     %         273.055175687);                       %% Liquidus point using FREZCHEM Europa ocean
     
-    delta_T=Tm-(-(9.1969758*(10^-5)*S_np1_km1_j.^2)-0.03942059*S_np1_km1_j+...
-       272.63617665);                        %% Liquidus point using FREZCHEM seawater
+%     delta_T=Tm-(-(9.1969758*(10^-5)*S_np1_km1_j.^2)-0.03942059*S_np1_km1_j+...
+%        272.63617665);                        %% Liquidus point using FREZCHEM seawater
+
+
+% BC LAKES LIQUIDUS CURVES
+%     delta_T=Tm-(-(2.1302*(10^-5)*S_np1_km1_j.^2)-0.01307*S_np1_km1_j+...
+%        273.0403);                        %% Liquidus point using FREZCHEM Salt Lake
+   
+%     delta_T=Tm-(-(2.9486*(10^-5)*S_np1_km1_j.^2)-0.012162*S_np1_km1_j+...
+%        273.00);                        %% Liquidus point using FREZCHEM Basque Lake 2.2 
+   
+%     delta_T=Tm-(-(3.2684*(10^-5)*S_np1_km1_j.^2)-0.010903*S_np1_km1_j+...
+%        273.0587);                        %% Liquidus point using FREZCHEM Basque Lake 2.3
+   
+    delta_T=Tm-(-(1.0579*(10^-5)*S_np1_km1_j.^2)-0.033321*S_np1_km1_j+...
+       272.8703);                        %% Liquidus point using FREZCHEM Last Chance Lake 
 
     Hs=c_i*(Tm-delta_T);                     %% Enthalpy Calculation
     Hsmelt=c_i*Tm;                           %% Enthalpy to melt ice
