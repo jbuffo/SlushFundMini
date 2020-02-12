@@ -8,25 +8,34 @@
 
 %% Input Parameters 
 %% Change these as desired - these govern the majority of the results
-Ttop=240;                %% Ice top temp (K) (use T_surf below if you want evolving surface temp)
-Tbottom=267.78;          %% Ocean Temp (K) [MgSO4 12.3ppt-273.0K, 100ppt-271.31K, 282ppt-267.5K NaCl 34ppt-271.2K
-                         %%                  NaCl 100ppt - 267.78, NaCl 200ppt - 261.08] *always put above liquidus*
+Lake=6;                  %% Select lake chemistry (1-Seawater, 2-MgSO4 Eruopa Ocean, 3-Salt Lake, 4-Basque Lake 2.2,
+                         %  5-Basque Lake 2.3, 6-Last Chance Lake
+                         
+S_bottom=70;            %% Ocean Salinity (ppt)
+S_sat0=70;               %% Initial ocean Saturation (ppt) NaCl - 357
+Sat_slope=5;          %% Slope of temperature dependent saturation (ppt/K)
+Ttop=255;                %% Ice top temp (K) (use T_surf below if you want evolving surface temp)
+
+[Brine_T,Brine_rho]=Ocean_Param_Calc(S_bottom,Lake); %% Calculates ocean temp (0.01K above liquidus) and density from salnity
+                                              %  and ocean composition
+
+Tbottom=Brine_T;         %% Ocean Temp (K) [MgSO4 12.3ppt-273.0K, 100ppt-271.31K, 282ppt-267.5K NaCl 34ppt-271.2K
+                         %                  NaCl 100ppt - 267.78, NaCl 200ppt - 261.08] *always put above liquidus*
 Tm=273.15;               %% Melt temperature of pure ice (K)
 k_i=2;                   %% Thermal conductivity (ice) W/m*K
 k_br=.6;                 %% '                            ' (brine)
 k_s=2*10^-9;             %% Diffusivity for Salt
-dt=100;                  %% Time step (s)
-tf=10000000;             %% Final time (s)
+dt=100;                   %% Time step (s)
+tf=5000000;              %% Final time (s)
 dz=.001;                 %% Spatial discretization (m)
-H=0.20;                  %% Domain size (m)
+H=0.45;                  %% Domain size (m)
 c_br=3985;               %% Specific heat of seawater (J/K)
 c_i=2000;                %% '              ' ice
 L=334774;                %% Latent heat of fusion ice<->water (J/Kg)
-L_epsom=13744870;        %% Latent heat of formation for precipitated salts (epsomite - 13744870) (J/Kg)
-S_bottom=100;            %% Ocean Salinity (ppt)
-S_sat=357;               %% Ocean Saturation (ppt) NaCl - 357
+L_salt=14265734;         %% Latent heat of formation for precipitated salts (epsomite - 13744870) (J/Kg)
+                         %  (Natron - 14265734)
 rho_i=917;               %% Density of Ice (Kg/m^3)
-rho_br=1081;             %% Density of Ocean (used in volume averaging - 1D grav. drainage uses delta S) 34ppt NaCl-1027
+rho_br=Brine_rho;        %% Density of Ocean (used in volume averaging - 1D grav. drainage uses delta S) 34ppt NaCl-1027
                          %  100ppt NaCl-1081 200ppt NaCl-1168 12.3ppt MgSO4-1012, 100pppt-1103, 282ppt-1323
 STol=0.1;                %% Error Tolerance for Salinity
 PhiTol=0.005;            %% Error Tolerance for Porosity
@@ -79,7 +88,7 @@ for n=1:tf/dt
         [NewTemp,NewPhi,NewS]=one_D_adv_ARD_interactive_lakes(...
         k_i,k_br,k_s,dt,dz,H,c_i,c_br,L,STol,TTol,PhiTol,phi_initial,...
         T_initial,S_initial,S_bottom,rho_i,...
-        rho_br,Tm,m,T_surf(n),Tbottom,g,rho_br,phi_c,BCoc,BCdn,dT);
+        rho_br,Tm,m,T_surf(n),Tbottom,g,rho_br,phi_c,BCoc,BCdn,dT,Lake);
 
         Temperature=NewTemp;
         Liquid_Fraction=NewPhi;
@@ -103,13 +112,14 @@ for n=1:tf/dt
             Salinity(IO_int+1:end)=S_ppt;
             
             % Salt precipitation and accompanying heat of formation
+            S_sat=S_sat0+Sat_slope*(Temperature(end)-Tbottom);
             if S_ppt>S_sat
                 S_hold=(S_ppt-S_sat)*(length(NewPhi)-IO_int);
                 Salt_Precip=Salt_Precip+S_hold;
                 Salt_Layer=floor(Salt_Precip/1000);
                 Salinity(IO_int+1:end)=S_sat;
                 % Temperature mod
-                del_T=((L_epsom/c_br)*(S_hold/1000))/(length(NewPhi)-IO_int);
+                del_T=((L_salt/c_br)*(S_hold/1000))/(length(NewPhi)-IO_int);
                 Temperature(IO_int+1:end)=Temperature(IO_int+1:end)+del_T;
                 if Salt_Layer==length(NewPhi)-IO_int
                     break
@@ -123,8 +133,8 @@ for n=1:tf/dt
     else
         [NewTemp,NewPhi,NewS]=one_D_adv_ARD_interactive_lakes(...
         k_i,k_br,k_s,dt,dz,H,c_i,c_br,L,STol,TTol,PhiTol,Liquid_Fraction',...
-        Temperature',Salinity',S_bottom,rho_i,...
-        rho_br,Tm,m,T_surf(n),Tbottom,g,rho_br,phi_c,BCoc,BCdn,dT);
+        Temperature',Salinity',S_ppt,rho_i,...
+        rho_br,Tm,m,T_surf(n),Tbottom,g,rho_br,phi_c,BCoc,BCdn,dT,Lake);
         
         
         Temperature=NewTemp;
@@ -155,13 +165,14 @@ for n=1:tf/dt
             Salinity(IO_int+1:end)=S_ppt;
             
             % Salt precipitation and accompanying heat of formation
+            S_sat=S_sat0+Sat_slope*(Temperature(end)-Tbottom);
             if S_ppt>S_sat
                 S_hold=(S_ppt-S_sat)*(length(NewPhi)-IO_int);
                 Salt_Precip=Salt_Precip+S_hold;
                 Salt_Layer=floor(Salt_Precip/1000);
                 Salinity(IO_int+1:end)=S_sat;
                 % Temperature mod
-                del_T=((L_epsom/c_br)*(S_hold/1000))/(length(NewPhi)-IO_int);
+                del_T=((L_salt/c_br)*(S_hold/1000))/(length(NewPhi)-IO_int);
                 Temperature(IO_int+1:end)=Temperature(IO_int+1:end)+del_T;
                 if Salt_Layer==length(NewPhi)-IO_int
                     break
